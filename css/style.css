@@ -4,6 +4,7 @@
 
 .main-wrapper {
   position: relative;
+  width: 1920px;
 }
 
 .healthBarContainer {
@@ -39,4 +40,21 @@
   width: 6%;
   height: 100%;
   background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+  font-weight: 700;
+}
+
+.pauseScreen {
+  display: none;
+  position: absolute;
+  width: 500px;
+  height: 200px;
+  left: calc(50% - 250px);
+  top: calc(50% - 100px);
+  background-color: #fff;
+  align-items: center;
+  justify-content: center;
 }

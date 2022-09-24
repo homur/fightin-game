@@ -8,6 +8,10 @@ export const Settings = {
     },
   },
 
+  gameDefaults: {
+    duration: 10,
+  },
+
   playerDefaults: {
     width: 50,
     height: 150,
@@ -23,7 +27,7 @@ export const Settings = {
 
   players: {
     player1: {
-      name: "player1",
+      name: "PLAYER 1",
       color: "green",
       position: {
         x: 100,
@@ -35,7 +39,7 @@ export const Settings = {
       },
     },
     player2: {
-      name: "player2",
+      name: "PLAYER 2",
       color: "blue",
       position: {
         x: 1820,

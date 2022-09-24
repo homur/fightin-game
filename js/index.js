@@ -1,4 +1,5 @@
 import { Settings } from "./settings.js";
+import { Game, GameStates } from "./game.js";
 
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext("2d");
@@ -14,6 +15,7 @@ class Sprite {
   isAttacking;
 
   constructor({
+    name,
     position,
     dimensions,
     hitPoint,
@@ -21,6 +23,7 @@ class Sprite {
     color,
     weaponXOffset,
   }) {
+    this.name = name;
     this.dimensions = dimensions;
     this.position = position;
     this.velocity = velocity;
@@ -112,6 +115,7 @@ class Sprite {
 }
 
 const player1 = new Sprite({
+  name: Settings.players.player1.name,
   dimensions: {
     width: Settings.playerDefaults.width,
     height: Settings.playerDefaults.height,
@@ -130,6 +134,7 @@ const player1 = new Sprite({
 });
 
 const player2 = new Sprite({
+  name: Settings.players.player2.name,
   dimensions: {
     width: Settings.playerDefaults.width,
     height: Settings.playerDefaults.height,
@@ -147,9 +152,23 @@ const player2 = new Sprite({
   weaponXOffset: -50,
 });
 
+const game = new Game({
+  duration: Settings.gameDefaults.duration,
+  player1,
+  player2,
+});
+game.startGame();
+
+const showResult = () => {
+  const pauseScreen = document.getElementById("pauseScreen");
+  pauseScreen.style.display = "flex";
+  pauseScreen.innerHTML = game.result;
+};
+
 const animate = () => {
   c.fillStyle = "black";
   c.fillRect(0, 0, canvas.width, canvas.height);
+  document.getElementById("timer").innerHTML = game.timer;
 
   // player 1 movement
   if (Settings.keys.a.pressed && player1.lastKeyPressed === "a") {
@@ -182,6 +201,12 @@ const animate = () => {
     player1.getDamage();
     document.getElementById("player1Health").style.width =
       player1.hitPoint + "%";
+  }
+
+  game.detectResults();
+
+  if (game.state === GameStates.FINISHED) {
+    showResult();
   }
 
   player1.update();
@@ -247,6 +272,8 @@ window.addEventListener("keyup", (e) => {
     case "ArrowLeft":
       Settings.keys.ArrowLeft.pressed = false;
       break;
+    case " ":
+      game.state !== GameStates.PAUSED ? game.pauseGame() : game.resumeGame();
   }
 });
 
