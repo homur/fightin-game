@@ -159,10 +159,19 @@ const game = new Game({
 });
 game.startGame();
 
-const showResult = () => {
+const showResult = (result) => {
   const pauseScreen = document.getElementById("pauseScreen");
-  pauseScreen.style.display = "flex";
-  pauseScreen.innerHTML = game.result;
+
+  if (game.state === GameStates.FINISHED) {
+    pauseScreen.style.display = "flex";
+    pauseScreen.innerHTML = game.result;
+  } else if (game.state === GameStates.PAUSED) {
+    pauseScreen.style.display = "flex";
+    pauseScreen.innerHTML = "GAME PAUSED";
+  } else {
+    pauseScreen.style.display = "none";
+    pauseScreen.innerHTML = "";
+  }
 };
 
 const animate = () => {
@@ -170,44 +179,45 @@ const animate = () => {
   c.fillRect(0, 0, canvas.width, canvas.height);
   document.getElementById("timer").innerHTML = game.timer;
 
-  // player 1 movement
-  if (Settings.keys.a.pressed && player1.lastKeyPressed === "a") {
-    player1.moveLeft();
-  } else if (Settings.keys.d.pressed && player1.lastKeyPressed === "d") {
-    player1.moveRight();
-  }
-
-  // player 2 movement
-  if (
-    Settings.keys.ArrowLeft.pressed &&
-    player2.lastKeyPressed === "ArrowLeft"
-  ) {
-    player2.moveLeft();
-  } else if (
-    Settings.keys.ArrowRight.pressed &&
-    player2.lastKeyPressed === "ArrowRight"
-  ) {
-    player2.moveRight();
-  }
-
-  // player1 collision
-  if (detectCollision(player1, player2) && player1.isAttacking) {
-    player2.getDamage();
-    document.getElementById("player2Health").style.width =
-      player2.hitPoint + "%";
-  }
-
-  if (detectCollision(player2, player1) && player2.isAttacking) {
-    player1.getDamage();
-    document.getElementById("player1Health").style.width =
-      player1.hitPoint + "%";
-  }
-
   game.detectResults();
 
-  if (game.state === GameStates.FINISHED) {
-    showResult();
+  if (game.state === GameStates.RUNNING) {
+    // player 1 movement
+    if (Settings.keys.a.pressed && player1.lastKeyPressed === "a") {
+      player1.moveLeft();
+    } else if (Settings.keys.d.pressed && player1.lastKeyPressed === "d") {
+      player1.moveRight();
+    }
+
+    // player 2 movement
+    if (
+      Settings.keys.ArrowLeft.pressed &&
+      player2.lastKeyPressed === "ArrowLeft"
+    ) {
+      player2.moveLeft();
+    } else if (
+      Settings.keys.ArrowRight.pressed &&
+      player2.lastKeyPressed === "ArrowRight"
+    ) {
+      player2.moveRight();
+    }
+
+    // player1 collision
+    if (detectCollision(player1, player2) && player1.isAttacking) {
+      player2.getDamage();
+      document.getElementById("player2Health").style.width =
+        player2.hitPoint + "%";
+    }
+
+    if (detectCollision(player2, player1) && player2.isAttacking) {
+      player1.getDamage();
+      document.getElementById("player1Health").style.width =
+        player1.hitPoint + "%";
+    }
   }
+
+  //TODO: Pause/Resume needs fixing
+  game.state !== GameStates.RUNNING && showResult(game.result);
 
   player1.update();
   player2.update();
