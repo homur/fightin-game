@@ -9,7 +9,7 @@ export const Settings = {
   },
 
   gameDefaults: {
-    duration: 60,
+    duration: 10,
   },
 
   playerDefaults: {
@@ -19,7 +19,7 @@ export const Settings = {
     hitPoint: 100,
     jumpVelocity: 10,
     punchSpeed: 100, //ms
-    damage: 0.3,
+    damage: 1,
     attackBox: {
       width: 100,
       height: 50,

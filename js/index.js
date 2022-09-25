@@ -1,6 +1,8 @@
-import { Settings } from "./settings.js";
-import { Game, GameStates } from "./game.js";
-import { Player, PlayerStates } from "./player.js";
+import { Settings } from "./utils/settings.js";
+import { Game, GameStates } from "./classes/game.js";
+import { Player, PlayerStates } from "./classes/player.js";
+import { Sprite } from "./classes/sprite.js";
+import { Utils } from "./utils/utils.js";
 
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext("2d");
@@ -8,10 +10,21 @@ const c = canvas.getContext("2d");
 canvas.width = Settings.canvas.width;
 canvas.height = Settings.canvas.height;
 
-c.fillRect(0, 0, canvas.width, canvas.height);
-
 const timerDiv = document.getElementById("timer");
 const pauseDiv = document.getElementById("pauseScreen");
+
+const background = new Sprite({
+  position: {
+    x: 0,
+    y: 0,
+  },
+  dimensions: {
+    width: canvas.width,
+    height: canvas.height,
+  },
+  canvas: c,
+  src: "../assets/background/background.gif",
+});
 
 const player1 = new Player({
   name: Settings.players.player1.name,
@@ -30,6 +43,7 @@ const player1 = new Player({
   color: Settings.players.player1.color,
   hitPoint: Settings.playerDefaults.hitPoint,
   weaponXOffset: 0,
+  canvas: c,
 });
 
 const player2 = new Player({
@@ -49,6 +63,7 @@ const player2 = new Player({
   color: Settings.players.player2.color,
   hitPoint: Settings.playerDefaults.hitPoint,
   weaponXOffset: -50,
+  canvas: c,
 });
 
 const game = new Game({
@@ -57,38 +72,13 @@ const game = new Game({
   player2,
 });
 
-const pauseScreen = () => {
-  if (game.state === GameStates.FINISHED) {
-    pauseDiv.style.display = "flex";
-    game.getResults();
-    pauseDiv.innerHTML = game.result;
-  } else if (game.state === GameStates.PAUSED) {
-    pauseDiv.style.display = "flex";
-    pauseDiv.innerHTML = "GAME PAUSED";
-  } else {
-    pauseDiv.style.display = "none";
-    pauseDiv.innerHTML = "";
-  }
-};
-
-const draw = (player) => {
-  c.fillStyle = player.color;
-  c.fillRect(
-    player.position.x,
-    player.position.y,
-    player.dimensions.width,
-    player.dimensions.height
-  );
-  if (player.state === PlayerStates.ATTACKING) {
-    c.fillStyle = "red";
-    c.fillRect(
-      player.attackBox.position.x,
-      player.attackBox.position.y,
-      player.attackBox.width,
-      player.attackBox.height
-    );
-  }
-};
+const utils = new Utils({
+  game,
+  player1,
+  player2,
+  timerDiv,
+  pauseDiv,
+});
 
 game.startGame();
 
@@ -96,63 +86,20 @@ const animate = () => {
   c.fillStyle = "black";
   c.fillRect(0, 0, canvas.width, canvas.height);
 
-  updateTimer();
+  background.update();
 
   detectMovement();
-  detectCollision();
 
-  detectFinish();
-  pauseScreen();
+  utils.updateTimer(timerDiv, game);
+  utils.detectCollision();
+
+  utils.detectFinish();
+  utils.pauseScreen();
 
   player1.update();
   player2.update();
 
-  draw(player1);
-  draw(player2);
-
   window.requestAnimationFrame(animate);
-};
-
-const updateTimer = () => {
-  if (timerDiv.innerHTML != game.timer) timerDiv.innerHTML = game.timer;
-};
-
-const detectFinish = () => {
-  if (player1.hitPoint <= 0 || player2.hitPoint <= 0) {
-    game.state = GameStates.FINISHED;
-  }
-};
-
-const detectCollision = () => {
-  // player1 collision
-  if (
-    isColliding(player1, player2) &&
-    player1.state === PlayerStates.ATTACKING &&
-    player2.state !== PlayerStates.DEFENDING
-  ) {
-    player2.getDamage();
-    document.getElementById("player2Health").style.width =
-      player2.hitPoint + "%";
-  }
-  //player2 collision
-  if (
-    isColliding(player2, player1) &&
-    player2.state === PlayerStates.ATTACKING &&
-    player1.state !== PlayerStates.DEFENDING
-  ) {
-    player1.getDamage();
-    document.getElementById("player1Health").style.width =
-      player1.hitPoint + "%";
-  }
-};
-
-const isColliding = (a, b) => {
-  return (
-    a.attackBox.position.x + a.attackBox.width > b.position.x &&
-    a.attackBox.position.x < b.position.x + b.dimensions.width &&
-    a.attackBox.position.y + a.attackBox.height >= b.position.y &&
-    a.attackBox.position.y <= b.position.y + b.dimensions.height
-  );
 };
 
 const detectMovement = () => {

@@ -1,4 +1,4 @@
-import { Settings } from "./settings.js";
+import { Settings } from "../utils/settings.js";
 
 const PlayerStates = Object.freeze({
   NEUTRAL: 1,
@@ -19,6 +19,7 @@ class Player {
     velocity,
     color,
     weaponXOffset,
+    canvas,
   }) {
     this.name = name;
     this.dimensions = dimensions;
@@ -35,9 +36,11 @@ class Player {
       height: Settings.playerDefaults.attackBox.height,
     };
     this.weaponXOffset = weaponXOffset;
+    this.canvas = canvas;
   }
 
   update() {
+    this.draw();
     this.gravitate();
 
     //attach weapon to player
@@ -45,10 +48,32 @@ class Player {
     this.attackBox.position.y = this.position.y;
   }
 
+  draw() {
+    this.canvas.fillStyle = this.color;
+    this.canvas.fillRect(
+      this.position.x,
+      this.position.y,
+      this.dimensions.width,
+      this.dimensions.height
+    );
+    if (this.state === PlayerStates.ATTACKING) {
+      this.canvas.fillStyle = "red";
+      this.canvas.fillRect(
+        this.attackBox.position.x,
+        this.attackBox.position.y,
+        this.attackBox.width,
+        this.attackBox.height
+      );
+    }
+  }
+
   gravitate() {
     this.position.y += this.velocity.y;
 
-    if (this.position.y + Settings.playerDefaults.height >= canvas.height) {
+    if (
+      this.position.y + Settings.playerDefaults.height >=
+      canvas.height - 50
+    ) {
       this.isJumping = false;
       this.velocity.y = 0;
     } else {

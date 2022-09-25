@@ -7,6 +7,7 @@ const GameStates = Object.freeze({
 class Game {
   state;
   timer;
+  timerId;
   result;
 
   constructor({ duration, player1, player2 }) {
@@ -37,10 +38,12 @@ class Game {
   decreaseTimer() {
     if (this.timer > 0 && this.state === GameStates.RUNNING) {
       this.timer--;
-      setTimeout(() => {
+      this.timerId = setTimeout(() => {
         this.decreaseTimer();
       }, 1000);
     } else if (this.timer <= 0) {
+      clearTimeout(this.timerId);
+      this.timerId = null;
       this.finishGame();
     }
   }
