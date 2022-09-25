@@ -46,14 +46,12 @@ class Game {
   }
 
   getResults() {
-    if (this.state === GameStates.RUNNING) {
-      if (this.player1.hitPoint < this.player2.hitPoint) {
-        this.result = this.player2.name + " WINS";
-      } else if (this.player2.hitPoint < this.player1.hitPoint) {
-        this.result = this.player1.name + " WINS";
-      } else if (this.player1.hitPoint === this.player2.hitPoint) {
-        this.result = "TIE";
-      }
+    if (this.player1.hitPoint < this.player2.hitPoint) {
+      this.result = this.player2.name + " WINS";
+    } else if (this.player2.hitPoint < this.player1.hitPoint) {
+      this.result = this.player1.name + " WINS";
+    } else if (this.player1.hitPoint === this.player2.hitPoint) {
+      this.result = "TIE";
     }
   }
 }

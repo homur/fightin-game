@@ -10,6 +10,9 @@ canvas.height = Settings.canvas.height;
 
 c.fillRect(0, 0, canvas.width, canvas.height);
 
+const timerDiv = document.getElementById("timer");
+const pauseDiv = document.getElementById("pauseScreen");
+
 const player1 = new Player({
   name: Settings.players.player1.name,
   dimensions: {
@@ -54,19 +57,17 @@ const game = new Game({
   player2,
 });
 
-const popup = (showPopUp) => {
-  const pauseScreen = document.getElementById("pauseScreen");
-
-  if (game.state === GameStates.FINISHED && showPopUp) {
-    pauseScreen.style.display = "flex";
+const pauseScreen = () => {
+  if (game.state === GameStates.FINISHED) {
+    pauseDiv.style.display = "flex";
     game.getResults();
-    pauseScreen.innerHTML = game.result;
-  } else if (game.state === GameStates.PAUSED && showPopUp) {
-    pauseScreen.style.display = "flex";
-    pauseScreen.innerHTML = "GAME PAUSED";
+    pauseDiv.innerHTML = game.result;
+  } else if (game.state === GameStates.PAUSED) {
+    pauseDiv.style.display = "flex";
+    pauseDiv.innerHTML = "GAME PAUSED";
   } else {
-    pauseScreen.style.display = "none";
-    pauseScreen.innerHTML = "";
+    pauseDiv.style.display = "none";
+    pauseDiv.innerHTML = "";
   }
 };
 
@@ -94,10 +95,14 @@ game.startGame();
 const animate = () => {
   c.fillStyle = "black";
   c.fillRect(0, 0, canvas.width, canvas.height);
-  document.getElementById("timer").innerHTML = game.timer;
+
+  updateTimer();
 
   detectMovement();
   detectCollision();
+
+  detectFinish();
+  pauseScreen();
 
   player1.update();
   player2.update();
@@ -108,11 +113,22 @@ const animate = () => {
   window.requestAnimationFrame(animate);
 };
 
+const updateTimer = () => {
+  if (timerDiv.innerHTML != game.timer) timerDiv.innerHTML = game.timer;
+};
+
+const detectFinish = () => {
+  if (player1.hitPoint <= 0 || player2.hitPoint <= 0) {
+    game.state = GameStates.FINISHED;
+  }
+};
+
 const detectCollision = () => {
   // player1 collision
   if (
     isColliding(player1, player2) &&
-    player1.state === PlayerStates.ATTACKING
+    player1.state === PlayerStates.ATTACKING &&
+    player2.state !== PlayerStates.DEFENDING
   ) {
     player2.getDamage();
     document.getElementById("player2Health").style.width =
@@ -121,7 +137,8 @@ const detectCollision = () => {
   //player2 collision
   if (
     isColliding(player2, player1) &&
-    player2.state === PlayerStates.ATTACKING
+    player2.state === PlayerStates.ATTACKING &&
+    player1.state !== PlayerStates.DEFENDING
   ) {
     player1.getDamage();
     document.getElementById("player1Health").style.width =
@@ -143,6 +160,7 @@ const detectMovement = () => {
     // player 1 movement
     if (Settings.keys.a.pressed && player1.lastKeyPressed === "a") {
       player1.moveLeft();
+      player1.state = PlayerStates.DEFENDING;
     } else if (
       Settings.keys.d.pressed &&
       player1.lastKeyPressed === "d" &&
@@ -150,6 +168,7 @@ const detectMovement = () => {
     ) {
       player1.moveRight();
     }
+
     if (Settings.keys.w.pressed) {
       player1.jump();
     }
@@ -169,6 +188,7 @@ const detectMovement = () => {
       player2.lastKeyPressed === "ArrowRight"
     ) {
       player2.moveRight();
+      player2.state = PlayerStates.DEFENDING;
     }
 
     if (Settings.keys.ArrowUp.pressed) {
@@ -222,35 +242,41 @@ window.addEventListener("keyup", (e) => {
   switch (e.key) {
     case "d":
       Settings.keys.d.pressed = false;
+      player1.state = PlayerStates.NEUTRAL;
       break;
     case "a":
       Settings.keys.a.pressed = false;
+      player1.state = PlayerStates.NEUTRAL;
       break;
     case "s":
       Settings.keys.s.pressed = false;
+      player1.state = PlayerStates.NEUTRAL;
       break;
     case "w":
       Settings.keys.w.pressed = false;
+      player1.state = PlayerStates.NEUTRAL;
       break;
     case "ArrowRight":
       Settings.keys.ArrowRight.pressed = false;
+      player2.state = PlayerStates.NEUTRAL;
       break;
     case "ArrowLeft":
       Settings.keys.ArrowLeft.pressed = false;
+      player2.state = PlayerStates.NEUTRAL;
       break;
     case "ArrowUp":
       Settings.keys.ArrowUp.pressed = false;
+      player2.state = PlayerStates.NEUTRAL;
       break;
     case "ArrowDown":
       Settings.keys.ArrowDown.pressed = false;
+      player2.state = PlayerStates.NEUTRAL;
       break;
     case " ":
       if (game.state === GameStates.PAUSED) {
         game.resumeGame();
-        popup(false);
       } else if (game.state === GameStates.RUNNING) {
         game.pauseGame();
-        popup(true);
       }
   }
 });
