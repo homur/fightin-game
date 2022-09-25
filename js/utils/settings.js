@@ -20,7 +20,7 @@ export const Settings = {
     hitPoint: 100,
     jumpVelocity: 10,
     punchSpeed: 100, //ms
-    damage: 1,
+    damage: 0.2,
     attackBox: {
       width: 100,
       height: 50,
@@ -32,7 +32,7 @@ export const Settings = {
       name: "PLAYER 1",
       color: "green",
       position: {
-        x: 100,
+        x: 400,
         y: 200,
       },
       velocity: {
@@ -44,7 +44,7 @@ export const Settings = {
       name: "PLAYER 2",
       color: "blue",
       position: {
-        x: 1820,
+        x: 1520,
         y: 200,
       },
       velocity: {
