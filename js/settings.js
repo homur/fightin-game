@@ -9,7 +9,7 @@ export const Settings = {
   },
 
   gameDefaults: {
-    duration: 10,
+    duration: 20,
   },
 
   playerDefaults: {
@@ -19,6 +19,7 @@ export const Settings = {
     hitPoint: 100,
     jumpVelocity: 10,
     punchSpeed: 100, //ms
+    damage: 0.5,
     attackBox: {
       width: 100,
       height: 50,
@@ -59,10 +60,22 @@ export const Settings = {
     d: {
       pressed: false,
     },
+    s: {
+      pressed: false,
+    },
+    w: {
+      pressed: false,
+    },
     ArrowLeft: {
       pressed: false,
     },
     ArrowRight: {
+      pressed: false,
+    },
+    ArrowDown: {
+      pressed: false,
+    },
+    ArrowUp: {
       pressed: false,
     },
   },

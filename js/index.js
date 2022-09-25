@@ -1,5 +1,6 @@
 import { Settings } from "./settings.js";
 import { Game, GameStates } from "./game.js";
+import { Player, PlayerStates } from "./player.js";
 
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext("2d");
@@ -9,112 +10,7 @@ canvas.height = Settings.canvas.height;
 
 c.fillRect(0, 0, canvas.width, canvas.height);
 
-class Sprite {
-  lastKeyPressed;
-  isJumping;
-  isAttacking;
-
-  constructor({
-    name,
-    position,
-    dimensions,
-    hitPoint,
-    velocity,
-    color,
-    weaponXOffset,
-  }) {
-    this.name = name;
-    this.dimensions = dimensions;
-    this.position = position;
-    this.velocity = velocity;
-    this.color = color;
-    this.hitPoint = hitPoint;
-    this.attackBox = {
-      position: {
-        x: this.position.x,
-        y: this.position.y,
-      },
-      width: Settings.playerDefaults.attackBox.width,
-      height: Settings.playerDefaults.attackBox.height,
-    };
-    this.weaponXOffset = weaponXOffset;
-  }
-
-  draw() {
-    c.fillStyle = this.color;
-    c.fillRect(
-      this.position.x,
-      this.position.y,
-      this.dimensions.width,
-      this.dimensions.height
-    );
-
-    if (this.isAttacking) {
-      c.fillStyle = "red";
-      c.fillRect(
-        this.attackBox.position.x,
-        this.attackBox.position.y,
-        this.attackBox.width,
-        this.attackBox.height
-      );
-    }
-  }
-
-  update() {
-    this.draw();
-    this.gravitate();
-
-    //attach weapon to player
-    this.attackBox.position.x = this.position.x + this.weaponXOffset;
-    this.attackBox.position.y = this.position.y;
-  }
-
-  gravitate() {
-    this.position.y += this.velocity.y;
-
-    if (this.position.y + Settings.playerDefaults.height >= canvas.height) {
-      this.isJumping = false;
-      this.velocity.y = 0;
-    } else {
-      this.isJumping = true;
-      this.velocity.y += Settings.playerDefaults.gravity;
-    }
-  }
-
-  getDamage() {
-    this.hitPoint -= 1;
-  }
-
-  moveRight() {
-    if (
-      this.position.x + this.velocity.x + Settings.playerDefaults.width <=
-      canvas.width - Settings.canvas.boundaries.x
-    ) {
-      this.position.x += this.velocity.x;
-    }
-  }
-
-  moveLeft() {
-    if (this.position.x >= this.velocity.x + Settings.canvas.boundaries.x) {
-      this.position.x -= this.velocity.x;
-    }
-  }
-
-  jump() {
-    if (this.position.y >= 0 && !this.isJumping)
-      this.velocity.y -= Settings.playerDefaults.jumpVelocity;
-  }
-
-  punch() {
-    this.isAttacking = true;
-
-    setTimeout(() => {
-      this.isAttacking = false;
-    }, Settings.playerDefaults.punchSpeed);
-  }
-}
-
-const player1 = new Sprite({
+const player1 = new Player({
   name: Settings.players.player1.name,
   dimensions: {
     width: Settings.playerDefaults.width,
@@ -133,7 +29,7 @@ const player1 = new Sprite({
   weaponXOffset: 0,
 });
 
-const player2 = new Sprite({
+const player2 = new Player({
   name: Settings.players.player2.name,
   dimensions: {
     width: Settings.playerDefaults.width,
@@ -157,15 +53,15 @@ const game = new Game({
   player1,
   player2,
 });
-game.startGame();
 
-const showResult = (result) => {
+const popup = (showPopUp) => {
   const pauseScreen = document.getElementById("pauseScreen");
 
-  if (game.state === GameStates.FINISHED) {
+  if (game.state === GameStates.FINISHED && showPopUp) {
     pauseScreen.style.display = "flex";
+    game.getResults();
     pauseScreen.innerHTML = game.result;
-  } else if (game.state === GameStates.PAUSED) {
+  } else if (game.state === GameStates.PAUSED && showPopUp) {
     pauseScreen.style.display = "flex";
     pauseScreen.innerHTML = "GAME PAUSED";
   } else {
@@ -174,25 +70,98 @@ const showResult = (result) => {
   }
 };
 
+const draw = (player) => {
+  c.fillStyle = player.color;
+  c.fillRect(
+    player.position.x,
+    player.position.y,
+    player.dimensions.width,
+    player.dimensions.height
+  );
+  if (player.state === PlayerStates.ATTACKING) {
+    c.fillStyle = "red";
+    c.fillRect(
+      player.attackBox.position.x,
+      player.attackBox.position.y,
+      player.attackBox.width,
+      player.attackBox.height
+    );
+  }
+};
+
+game.startGame();
+
 const animate = () => {
   c.fillStyle = "black";
   c.fillRect(0, 0, canvas.width, canvas.height);
   document.getElementById("timer").innerHTML = game.timer;
 
-  game.detectResults();
+  detectMovement();
+  detectCollision();
 
+  player1.update();
+  player2.update();
+
+  draw(player1);
+  draw(player2);
+
+  window.requestAnimationFrame(animate);
+};
+
+const detectCollision = () => {
+  // player1 collision
+  if (
+    isColliding(player1, player2) &&
+    player1.state === PlayerStates.ATTACKING
+  ) {
+    player2.getDamage();
+    document.getElementById("player2Health").style.width =
+      player2.hitPoint + "%";
+  }
+  //player2 collision
+  if (
+    isColliding(player2, player1) &&
+    player2.state === PlayerStates.ATTACKING
+  ) {
+    player1.getDamage();
+    document.getElementById("player1Health").style.width =
+      player1.hitPoint + "%";
+  }
+};
+
+const isColliding = (a, b) => {
+  return (
+    a.attackBox.position.x + a.attackBox.width > b.position.x &&
+    a.attackBox.position.x < b.position.x + b.dimensions.width &&
+    a.attackBox.position.y + a.attackBox.height >= b.position.y &&
+    a.attackBox.position.y <= b.position.y + b.dimensions.height
+  );
+};
+
+const detectMovement = () => {
   if (game.state === GameStates.RUNNING) {
     // player 1 movement
     if (Settings.keys.a.pressed && player1.lastKeyPressed === "a") {
       player1.moveLeft();
-    } else if (Settings.keys.d.pressed && player1.lastKeyPressed === "d") {
+    } else if (
+      Settings.keys.d.pressed &&
+      player1.lastKeyPressed === "d" &&
+      player1.position.x <= player2.position.x - player1.dimensions.width
+    ) {
       player1.moveRight();
+    }
+    if (Settings.keys.w.pressed) {
+      player1.jump();
+    }
+    if (Settings.keys.s.pressed) {
+      player1.punch();
     }
 
     // player 2 movement
     if (
       Settings.keys.ArrowLeft.pressed &&
-      player2.lastKeyPressed === "ArrowLeft"
+      player2.lastKeyPressed === "ArrowLeft" &&
+      player2.position.x >= player1.position.x + player2.dimensions.width
     ) {
       player2.moveLeft();
     } else if (
@@ -202,36 +171,17 @@ const animate = () => {
       player2.moveRight();
     }
 
-    // player1 collision
-    if (detectCollision(player1, player2) && player1.isAttacking) {
-      player2.getDamage();
-      document.getElementById("player2Health").style.width =
-        player2.hitPoint + "%";
+    if (Settings.keys.ArrowUp.pressed) {
+      player2.jump();
     }
 
-    if (detectCollision(player2, player1) && player2.isAttacking) {
-      player1.getDamage();
-      document.getElementById("player1Health").style.width =
-        player1.hitPoint + "%";
+    if (
+      Settings.keys.ArrowDown.pressed &&
+      player1.state !== PlayerStates.ATTACKING
+    ) {
+      player2.punch();
     }
   }
-
-  //TODO: Pause/Resume needs fixing
-  game.state !== GameStates.RUNNING && showResult(game.result);
-
-  player1.update();
-  player2.update();
-
-  window.requestAnimationFrame(animate);
-};
-
-const detectCollision = (a, b) => {
-  return (
-    a.attackBox.position.x + a.attackBox.width > b.position.x &&
-    a.attackBox.position.x < b.position.x + b.dimensions.width &&
-    a.attackBox.position.y + a.attackBox.height >= b.position.y &&
-    a.attackBox.position.y <= b.position.y + b.dimensions.height
-  );
 };
 
 window.addEventListener("keydown", (e) => {
@@ -245,10 +195,10 @@ window.addEventListener("keydown", (e) => {
       player1.lastKeyPressed = "a";
       break;
     case "w":
-      player1.jump();
+      Settings.keys.w.pressed = true;
       break;
     case "s":
-      player1.punch();
+      Settings.keys.s.pressed = true;
       break;
 
     case "ArrowLeft":
@@ -260,10 +210,10 @@ window.addEventListener("keydown", (e) => {
       player2.lastKeyPressed = "ArrowRight";
       break;
     case "ArrowUp":
-      player2.jump();
+      Settings.keys.ArrowUp.pressed = true;
       break;
     case "ArrowDown":
-      player2.punch();
+      Settings.keys.ArrowDown.pressed = true;
       break;
   }
 });
@@ -276,14 +226,32 @@ window.addEventListener("keyup", (e) => {
     case "a":
       Settings.keys.a.pressed = false;
       break;
+    case "s":
+      Settings.keys.s.pressed = false;
+      break;
+    case "w":
+      Settings.keys.w.pressed = false;
+      break;
     case "ArrowRight":
       Settings.keys.ArrowRight.pressed = false;
       break;
     case "ArrowLeft":
       Settings.keys.ArrowLeft.pressed = false;
       break;
+    case "ArrowUp":
+      Settings.keys.ArrowUp.pressed = false;
+      break;
+    case "ArrowDown":
+      Settings.keys.ArrowDown.pressed = false;
+      break;
     case " ":
-      game.state !== GameStates.PAUSED ? game.pauseGame() : game.resumeGame();
+      if (game.state === GameStates.PAUSED) {
+        game.resumeGame();
+        popup(false);
+      } else if (game.state === GameStates.RUNNING) {
+        game.pauseGame();
+        popup(true);
+      }
   }
 });
 

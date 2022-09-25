@@ -41,19 +41,18 @@ class Game {
         this.decreaseTimer();
       }, 1000);
     } else if (this.timer <= 0) {
-      this.result = "TIE";
       this.finishGame();
     }
   }
 
-  detectResults() {
+  getResults() {
     if (this.state === GameStates.RUNNING) {
-      if (this.player1.hitPoint <= 0) {
-        this.result = this.player1.name + " WINS";
-        this.finishGame();
-      } else if (this.player2.hitPoint <= 0) {
+      if (this.player1.hitPoint < this.player2.hitPoint) {
         this.result = this.player2.name + " WINS";
-        this.finishGame();
+      } else if (this.player2.hitPoint < this.player1.hitPoint) {
+        this.result = this.player1.name + " WINS";
+      } else if (this.player1.hitPoint === this.player2.hitPoint) {
+        this.result = "TIE";
       }
     }
   }
