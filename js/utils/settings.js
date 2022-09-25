@@ -6,15 +6,16 @@ export const Settings = {
       x: 20,
       y: 20,
     },
+    floor: 76,
   },
 
   gameDefaults: {
-    duration: 10,
+    duration: 60,
   },
 
   playerDefaults: {
-    width: 50,
-    height: 150,
+    width: 40,
+    height: 125,
     gravity: 0.2,
     hitPoint: 100,
     jumpVelocity: 10,

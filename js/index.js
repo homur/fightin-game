@@ -18,12 +18,20 @@ const background = new Sprite({
     x: 0,
     y: 0,
   },
-  dimensions: {
-    width: canvas.width,
-    height: canvas.height,
+
+  canvas: c,
+  src: "../assets/background/background.jpg",
+});
+
+const shop = new Sprite({
+  position: {
+    x: 630,
+    y: 128,
   },
   canvas: c,
-  src: "../assets/background/background.gif",
+  src: "../assets/background/shop_anim.png",
+  scale: 2.2,
+  framesCount: 6,
 });
 
 const player1 = new Player({
@@ -87,6 +95,7 @@ const animate = () => {
   c.fillRect(0, 0, canvas.width, canvas.height);
 
   background.update();
+  shop.update();
 
   detectMovement();
 

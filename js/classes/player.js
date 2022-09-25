@@ -72,7 +72,7 @@ class Player {
 
     if (
       this.position.y + Settings.playerDefaults.height >=
-      canvas.height - 50
+      canvas.height - Settings.canvas.floor
     ) {
       this.isJumping = false;
       this.velocity.y = 0;
